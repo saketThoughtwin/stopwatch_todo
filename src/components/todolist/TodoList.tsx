@@ -1,40 +1,50 @@
 import React, { useState } from "react";
-import { Box, Container, Typography, TextField, Button, Paper, List, ListItem, ListItemText, IconButton, Divider } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
+import { Box, Container, Typography, TextField, Button, Paper, List, ListItem, ListItemText, IconButton, Divider, Checkbox } from "@mui/material";
+import { Edit, Delete, CheckBox } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import type { RootState } from "../../store/store";
+import { addTodo,editTodo,deleteTodo,toggleTodo } from "../../features/todos/todoSlice";
+import { useDispatch, useSelector } from "react-redux";
 const todolist = () => {
-    const [todos, setTodos] = useState<string[]>([]);
+    const todos = useSelector((state: RootState)=>state.todos.todos);
+    const dispatch = useDispatch();
     const [input, setInput] = useState('');
     const [isEditing, setIsEditing] = useState(false);
-    const [editIndex, setEditIndex] = useState<number | null>(null);
+    const [editId, setEditId] = useState<number | null>(null);
     const navigate = useNavigate();
-    const handleAddTodo = () => {
+
+    const handleAddOrEdit = () => {
         const trimmedInput = input.trim();
         if (!trimmedInput) return;
-        if (isEditing && editIndex !== null) {
-            const updatedTodos = [...todos];
-            updatedTodos[editIndex] = trimmedInput;
-            setTodos(updatedTodos);
+        if (isEditing && editId !== null) {
+            dispatch(editTodo({id:editId, text:trimmedInput}))
             setIsEditing(false);
-            setEditIndex(null);
+            setEditId(null);
         } else {
-            setTodos([...todos, trimmedInput]);
+            dispatch(addTodo(trimmedInput));
         }
         setInput('')
     };
-    const handleDelete = (index: number) => {
-        const filteredData = todos.filter((_, i) => i !== index);
-        setTodos(filteredData);
-        if (isEditing && editIndex === index) {
+    const handleEdit = (id: number) => {
+        const todo = todos.find((t)=>t.id ===id)
+        if(todo){
+            setInput(todo.text);
+            setEditId(id);
+            setIsEditing(true);
+        }
+        
+      };
+    const handleDelete = (id: number) => {
+       dispatch(deleteTodo(id));
+        if (isEditing && editId === id) {
             setIsEditing(false);
+            setEditId(null);
             setInput('');
         }
     };
-    const handleEdit = (index: number) => {
-        setInput(todos[index]);
-        setEditIndex(index);
-        setIsEditing(true);
-    }
+    const handleToggle = (id: number) => {
+        dispatch(toggleTodo(id));
+      };
 
     return (
         <Container maxWidth="sm" sx={{ mt: 5 }}>
@@ -48,7 +58,7 @@ const todolist = () => {
                         onChange={(e) => setInput(e.target.value)}
                         fullWidth
                     />
-                    <Button variant="contained" color="primary" onClick={handleAddTodo}
+                    <Button variant="contained" color="primary" onClick={handleAddOrEdit}
                     > {isEditing ? "Update" : "Add"} </Button>
                 </Box>
                 <Divider sx={{ mb: 2 }} />
@@ -59,16 +69,26 @@ const todolist = () => {
                         </Typography>
                     ) : (
                         <List>
-                            {todos.map((todo, index) => (
-                                <ListItem key={index}
+                            {todos.map((todo) => (
+                                <ListItem key={todo.id}
                                     secondaryAction={<>
                                         <IconButton edge="end" aria-label="edit" sx={{ mr: 1 }}
-                                            onClick={() => handleEdit(index)}>
+                                            onClick={() => handleEdit(todo.id)}>
                                             <Edit />
                                         </IconButton>
-                                        <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(index)}>
+                                        <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(todo.id)}>
                                             <Delete /></IconButton></>}>
-                                    <ListItemText primary={todo} />
+                                            <Checkbox
+                  edge="start"
+                  checked={todo.completed}
+                  onChange={() => handleToggle(todo.id)}
+                  tabIndex={-1}
+                />
+                <ListItemText primary={
+                    <span style={{textDecoration:todo.completed?"line-through":"none"}}>
+                        {todo.text}
+                    </span>
+                } />
                                 </ListItem>
                             ))}
                         </List>
@@ -87,6 +107,14 @@ const todolist = () => {
                 onClick={() => navigate("/task")}
                 >
                 Go To Task
+                </Button>
+                <Button
+                variant="outlined"
+                fullWidth
+                sx={{ mt: 2 }}
+                onClick={() => navigate("/dummyapi")}
+                >
+                Go To API
                 </Button>
             </Paper>
 

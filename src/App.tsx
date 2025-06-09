@@ -5,6 +5,7 @@ import StopWatch from "./components/stopwatch/StopWatch";
 import { BrowserRouter as Router,Routes,Route } from "react-router-dom";
 import Playground from "./components/playground/Playground";
 import Task from "./components/task/Task";
+import FetchApi from "./components/fetchapi/FetchApi";
 const theme = createTheme({
   palette: {
     mode: "light", // Ensures light background
@@ -23,6 +24,7 @@ const App: React.FC = () => {
               <Route path="/" element={<TodoList />} />
               <Route path="/stopwatch" element={<StopWatch />} />
               <Route path="/task" element={<Task />} />
+              <Route path="/dummyapi" element={<FetchApi />} />
             </Routes>
          {/* <Playground />
            */}
